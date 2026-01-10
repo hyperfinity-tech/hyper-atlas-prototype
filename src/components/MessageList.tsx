@@ -11,26 +11,24 @@ interface MessageListProps {
 
 function Greeting() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-primary"
-        >
-          <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
+    <div className="flex flex-col items-center justify-center py-24 text-center animate-slide-up">
+      {/* Animated brand element - cluster of signature dots */}
+      <div className="relative mb-8">
+        <div className="w-16 h-16 rounded-full bg-hyper-pink border-[3px] border-black flex items-center justify-center shadow-lg">
+          <span className="text-2xl text-white font-bold" style={{ fontFamily: 'var(--font-heading)' }}>?</span>
+        </div>
+        {/* Orbiting accent dots */}
+        <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-hyper-teal border-2 border-black animate-dot-pulse" />
+        <div className="absolute -bottom-1 -left-3 w-3 h-3 rounded-full bg-hyper-blue border-2 border-black animate-dot-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
-      <h2 className="text-xl font-semibold mb-2">Welcome to Atlas</h2>
-      <p className="text-muted-foreground max-w-sm">
-        Ask a question about your documents and I&apos;ll help you find the answer.
+
+      <h2 className="text-2xl font-bold mb-3 tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+        Welcome to <span className="text-hyper-pink">Atlas</span>
+      </h2>
+      <p className="text-hyper-gray max-w-md text-lg leading-relaxed">
+        Ask anything about your documents.
+        <br />
+        <span className="text-hyper-teal font-medium">I&apos;ll find the answers.</span>
       </p>
     </div>
   );
@@ -38,29 +36,18 @@ function Greeting() {
 
 function ThinkingIndicator() {
   return (
-    <div className="flex justify-start">
+    <div className="flex justify-start animate-slide-up">
       <div className="flex gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-border">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-primary"
-          >
-            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
+        {/* Branded avatar */}
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black border-2 border-hyper-pink">
+          <div className="w-3 h-3 rounded-full bg-hyper-teal animate-dot-pulse" />
         </div>
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <span className="animate-pulse">Thinking</span>
-          <span className="animate-bounce [animation-delay:0.1s]">.</span>
-          <span className="animate-bounce [animation-delay:0.2s]">.</span>
-          <span className="animate-bounce [animation-delay:0.3s]">.</span>
+
+        {/* Branded thinking dots */}
+        <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-full">
+          <div className="w-2 h-2 rounded-full bg-hyper-pink animate-thinking-1" />
+          <div className="w-2 h-2 rounded-full bg-hyper-blue animate-thinking-2" />
+          <div className="w-2 h-2 rounded-full bg-hyper-teal animate-thinking-3" />
         </div>
       </div>
     </div>
@@ -68,36 +55,33 @@ function ThinkingIndicator() {
 }
 
 export function MessageList({ messages, isLoading }: MessageListProps) {
+  // Show thinking indicator only when loading AND we haven't started streaming yet
+  const lastMessage = messages[messages.length - 1];
+  const isStreaming = lastMessage?.role === "assistant";
+  const showThinking = isLoading && !isStreaming;
+
   return (
     <div className="mx-auto flex min-w-0 max-w-3xl flex-col gap-4 px-4 py-6 md:gap-6">
       {messages.length === 0 && !isLoading && <Greeting />}
 
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <div
           key={message.id}
-          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+          className={`flex animate-slide-up ${message.role === "user" ? "justify-end" : "justify-start"}`}
+          style={{ animationDelay: `${index * 0.05}s` }}
         >
           {message.role === "assistant" && (
             <div className="flex gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-border">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-primary"
-                >
-                  <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+              {/* Hyperfinity branded avatar */}
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black border-2 border-hyper-pink">
+                <div className="w-3 h-3 rounded-full bg-hyper-teal" />
               </div>
               <div className="flex flex-col gap-2 max-w-[calc(100%-3rem)]">
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                {/* Message content with teal left accent */}
+                <div className="bg-muted/60 rounded-2xl px-4 py-3 border-l-2 border-hyper-teal">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
                 </div>
                 {message.citations && message.citations.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
@@ -111,17 +95,14 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
           )}
 
           {message.role === "user" && (
-            <div
-              className="max-w-[80%] rounded-2xl px-4 py-2.5 text-white"
-              style={{ backgroundColor: "#0066ff" }}
-            >
+            <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-hyper-pink text-white shadow-md">
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
             </div>
           )}
         </div>
       ))}
 
-      {isLoading && <ThinkingIndicator />}
+      {showThinking && <ThinkingIndicator />}
     </div>
   );
 }

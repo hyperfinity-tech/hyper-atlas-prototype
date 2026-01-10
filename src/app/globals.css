@@ -1,18 +1,34 @@
 @import "tailwindcss";
 
 :root {
+  /* Hyperfinity Brand Colors */
+  --hyper-pink: #F85AA4;
+  --hyper-pink-hover: #C64882;
+  --hyper-blue: #3976DD;
+  --hyper-blue-dark: #2D73FF;
+  --hyper-teal: #3FEAC8;
+  --hyper-teal-dark: #32BBA1;
+  --hyper-gray: #B1A6A6;
+
+  /* Semantic Color Mappings */
   --background: #ffffff;
-  --foreground: #0a0a0a;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --foreground: #000000;
+  --muted: #f8f7f7;
+  --muted-foreground: var(--hyper-gray);
   --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
+  --popover-foreground: #000000;
   --border: #e4e4e7;
-  --primary: #0a0a0a;
-  --primary-foreground: #fafafa;
+  --primary: var(--hyper-pink);
+  --primary-foreground: #ffffff;
+
+  /* Animation Timing */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @theme inline {
+  /* Core semantic colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -22,21 +38,31 @@
   --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Hyperfinity brand colors */
+  --color-hyper-pink: var(--hyper-pink);
+  --color-hyper-pink-hover: var(--hyper-pink-hover);
+  --color-hyper-blue: var(--hyper-blue);
+  --color-hyper-blue-dark: var(--hyper-blue-dark);
+  --color-hyper-teal: var(--hyper-teal);
+  --color-hyper-teal-dark: var(--hyper-teal-dark);
+  --color-hyper-gray: var(--hyper-gray);
+
+  /* Typography */
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #fafafa;
-    --muted: #27272a;
+    --muted: #1a1a1a;
     --muted-foreground: #a1a1aa;
     --popover: #18181b;
     --popover-foreground: #fafafa;
     --border: #27272a;
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
   }
 }
 
@@ -44,4 +70,75 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Custom Animations */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dot-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+@keyframes thinking-dot {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Animation Utilities */
+.animate-slide-up {
+  animation: slide-up-fade 0.3s var(--ease-bounce) forwards;
+}
+
+.animate-dot-pulse {
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+.animate-thinking-1 {
+  animation: thinking-dot 1.4s ease-in-out infinite;
+}
+
+.animate-thinking-2 {
+  animation: thinking-dot 1.4s ease-in-out 0.2s infinite;
+}
+
+.animate-thinking-3 {
+  animation: thinking-dot 1.4s ease-in-out 0.4s infinite;
+}
+
+/* Focus visible for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--hyper-blue);
+  outline-offset: 2px;
 }

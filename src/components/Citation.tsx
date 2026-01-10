@@ -14,23 +14,11 @@ export function Citation({ citation }: CitationProps) {
     <span className="relative inline-block">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex items-center gap-1.5 rounded-full border border-hyper-blue/30 bg-hyper-blue/10 px-3 py-1 text-xs font-medium text-hyper-blue transition-all duration-200 hover:bg-hyper-teal/20 hover:text-hyper-teal-dark hover:border-hyper-teal/30"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-          <polyline points="14 2 14 8 20 8" />
-        </svg>
-        <span className="max-w-[120px] truncate">{citation.sourceTitle}</span>
+        {/* Mini signature dot */}
+        <div className="w-2 h-2 rounded-full bg-current" />
+        <span className="max-w-[140px] truncate">{citation.sourceTitle}</span>
       </button>
       {isOpen && (
         <>
@@ -38,12 +26,15 @@ export function Citation({ citation }: CitationProps) {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute left-0 top-full z-20 mt-1 w-80 rounded-lg border bg-popover p-3 shadow-lg">
-            <div className="mb-2 flex items-start justify-between gap-2">
-              <span className="font-medium text-sm">{citation.sourceTitle}</span>
+          <div className="absolute left-0 top-full z-20 mt-2 w-80 rounded-xl border-2 border-hyper-blue/20 bg-white p-4 shadow-xl animate-slide-up">
+            {/* Header */}
+            <div className="mb-3 flex items-start justify-between gap-2 pb-2 border-b border-muted">
+              <span className="font-semibold text-sm" style={{ fontFamily: 'var(--font-heading)' }}>
+                {citation.sourceTitle}
+              </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="shrink-0 rounded p-0.5 hover:bg-muted"
+                className="shrink-0 rounded-full p-1 hover:bg-muted transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -61,8 +52,10 @@ export function Citation({ citation }: CitationProps) {
               </button>
             </div>
             {citation.text && (
-              <p className="text-xs text-muted-foreground line-clamp-4 mb-2">
-                &ldquo;{citation.text}&rdquo;
+              <p className="text-sm text-hyper-gray mb-3 leading-relaxed">
+                <span className="text-hyper-pink text-lg font-bold">&ldquo;</span>
+                {citation.text}
+                <span className="text-hyper-pink text-lg font-bold">&rdquo;</span>
               </p>
             )}
             {citation.sourceUri && (
@@ -70,7 +63,7 @@ export function Citation({ citation }: CitationProps) {
                 href={citation.sourceUri}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-hyper-blue hover:text-hyper-pink transition-colors"
               >
                 View source
                 <svg

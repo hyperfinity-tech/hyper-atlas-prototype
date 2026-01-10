@@ -25,7 +25,9 @@ export async function POST(request: Request) {
 
   try {
     const genai = getGenAI();
-    const response = await genai.models.generateContent({
+
+    // Use streaming API
+    const stream = await genai.models.generateContentStream({
       model: "gemini-2.5-flash",
       contents,
       config: {
@@ -39,32 +41,68 @@ export async function POST(request: Request) {
       },
     });
 
-    // Extract text content
-    const text =
-      response.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text)
-        .join("") || "";
+    // Create a readable stream for the response
+    const encoder = new TextEncoder();
+    let citations: Citation[] = [];
 
-    // Extract citations from grounding metadata
-    const citations: Citation[] = [];
-    const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            // Extract text from chunk
+            const text = chunk.candidates?.[0]?.content?.parts
+              ?.map((part) => part.text)
+              .join("") || "";
 
-    if (groundingMetadata?.groundingChunks) {
-      groundingMetadata.groundingChunks.forEach((chunk, index) => {
-        if (chunk.retrievedContext) {
-          citations.push({
-            id: index + 1,
-            sourceTitle: chunk.retrievedContext.title || "Unknown Source",
-            sourceUri: chunk.retrievedContext.uri,
-            text: chunk.retrievedContext.text || "",
-          });
+            if (text) {
+              // Send text chunk as SSE
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: "text", content: text })}\n\n`)
+              );
+            }
+
+            // Check for grounding metadata (usually in final chunk)
+            const groundingMetadata = chunk.candidates?.[0]?.groundingMetadata;
+            if (groundingMetadata?.groundingChunks) {
+              groundingMetadata.groundingChunks.forEach((grChunk, index) => {
+                if (grChunk.retrievedContext) {
+                  citations.push({
+                    id: index + 1,
+                    sourceTitle: grChunk.retrievedContext.title || "Unknown Source",
+                    sourceUri: grChunk.retrievedContext.uri,
+                    text: grChunk.retrievedContext.text || "",
+                  });
+                }
+              });
+            }
+          }
+
+          // Send citations at the end
+          if (citations.length > 0) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "citations", citations })}\n\n`)
+            );
+          }
+
+          // Send done signal
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          controller.close();
+        } catch (error) {
+          console.error("Streaming error:", error);
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "error", message: "Streaming failed" })}\n\n`)
+          );
+          controller.close();
         }
-      });
-    }
+      },
+    });
 
-    return Response.json({
-      content: text,
-      citations,
+    return new Response(readableStream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
     });
   } catch (error) {
     console.error("Gemini API error:", error);
