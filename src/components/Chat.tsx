@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Message, Citation } from "@/lib/types";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
@@ -9,6 +10,7 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [useCuratedOnly, setUseCuratedOnly] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -145,14 +147,26 @@ export function Chat() {
       {/* Header with Hyperfinity branding */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 py-4">
         <div className="mx-auto max-w-3xl flex items-center gap-3">
-          {/* Signature Hyperfinity dot cluster */}
-          <div className="relative">
-            <div className="w-4 h-4 rounded-full bg-hyper-pink border-2 border-black" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-hyper-teal animate-dot-pulse" />
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+          {/* Hyperfinity Logo */}
+          <Image
+            src="/hyperfinity_logo_dark.png"
+            alt="Hyperfinity"
+            width={120}
+            height={40}
+            className="dark:invert-0 h-6 w-auto"
+          />
+          {/* Globe Icon */}
+          <Image
+            src="/globe.svg"
+            alt="Atlas"
+            width={24}
+            height={24}
+            className="w-6 h-6"
+          />
+          {/* Atlas title - right aligned */}
+          <span className="ml-auto text-2xl font-bold tracking-tight text-hyper-pink">
             Atlas
-          </h1>
+          </span>
         </div>
         {/* Gradient accent line */}
         <div
@@ -169,7 +183,7 @@ export function Chat() {
           onScroll={handleScroll}
           className="absolute inset-0 overflow-y-auto touch-pan-y"
         >
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList messages={messages} isLoading={isLoading} onSendMessage={sendMessage} />
           <div ref={messagesEndRef} />
         </div>
 
@@ -197,6 +211,28 @@ export function Chat() {
 
       <div className="border-t border-border/50 bg-background p-4">
         <div className="mx-auto max-w-3xl">
+          {/* Curated sources toggle */}
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={() => setUseCuratedOnly(!useCuratedOnly)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                useCuratedOnly
+                  ? "bg-hyper-teal text-black"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              <div
+                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  useCuratedOnly ? "border-black bg-white" : "border-current"
+                }`}
+              >
+                {useCuratedOnly && (
+                  <div className="w-2 h-2 rounded-full bg-hyper-teal" />
+                )}
+              </div>
+              Use curated sources only
+            </button>
+          </div>
           <MessageInput onSend={sendMessage} disabled={isLoading} />
         </div>
       </div>

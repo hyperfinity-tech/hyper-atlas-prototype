@@ -7,11 +7,18 @@ import { Citation } from "./Citation";
 interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
+  onSendMessage?: (message: string) => void;
 }
 
-function Greeting() {
+const EXAMPLE_QUESTIONS = [
+  "What's the latest thinking on Feature Store?",
+  "NBA - what is it?",
+  "I need to deliver a presentation on HyperFinity's approach to Measurement, give me some pointers",
+];
+
+function Greeting({ onQuestionClick }: { onQuestionClick?: (question: string) => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center animate-slide-up">
+    <div className="flex flex-col items-center justify-center py-16 text-center animate-slide-up">
       {/* Animated brand element - cluster of signature dots */}
       <div className="relative mb-8">
         <div className="w-16 h-16 rounded-full bg-hyper-pink border-[3px] border-black flex items-center justify-center shadow-lg">
@@ -25,11 +32,25 @@ function Greeting() {
       <h2 className="text-2xl font-bold mb-3 tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
         Welcome to <span className="text-hyper-pink">Atlas</span>
       </h2>
-      <p className="text-hyper-gray max-w-md text-lg leading-relaxed">
-        Ask anything about your documents.
-        <br />
-        <span className="text-hyper-teal font-medium">I&apos;ll find the answers.</span>
+      <p className="text-hyper-gray max-w-md text-lg leading-relaxed mb-8">
+        Query HyperFinity Best Practices & Solutions.
       </p>
+
+      {/* Example questions */}
+      <div className="flex flex-row gap-3 w-full max-w-4xl flex-wrap justify-center">
+        {EXAMPLE_QUESTIONS.map((question, index) => (
+          <button
+            key={index}
+            onClick={() => onQuestionClick?.(question)}
+            className="text-left px-4 py-3 rounded-xl border-2 border-border bg-muted/30 hover:border-hyper-pink hover:bg-hyper-pink/5 transition-all duration-200 group flex-1 min-w-[200px] max-w-[280px]"
+            style={{ animationDelay: `${0.1 + index * 0.1}s` }}
+          >
+            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+              {question}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -54,7 +75,7 @@ function ThinkingIndicator() {
   );
 }
 
-export function MessageList({ messages, isLoading }: MessageListProps) {
+export function MessageList({ messages, isLoading, onSendMessage }: MessageListProps) {
   // Show thinking indicator only when loading AND we haven't started streaming yet
   const lastMessage = messages[messages.length - 1];
   const isStreaming = lastMessage?.role === "assistant";
@@ -62,7 +83,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
 
   return (
     <div className="mx-auto flex min-w-0 max-w-3xl flex-col gap-4 px-4 py-6 md:gap-6">
-      {messages.length === 0 && !isLoading && <Greeting />}
+      {messages.length === 0 && !isLoading && <Greeting onQuestionClick={onSendMessage} />}
 
       {messages.map((message, index) => (
         <div

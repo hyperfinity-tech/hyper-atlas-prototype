@@ -1,6 +1,25 @@
 @import "tailwindcss";
 
+/* Roobert Font - Hyperfinity Brand Font */
+@font-face {
+  font-family: 'Roobert';
+  src: url('/fonts/Roobert-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roobert';
+  src: url('/fonts/Roobert-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  /* Font Family */
+  --font-roobert: 'Roobert', system-ui, sans-serif;
   /* Hyperfinity Brand Colors */
   --hyper-pink: #F85AA4;
   --hyper-pink-hover: #C64882;
@@ -49,9 +68,7 @@
   --color-hyper-gray: var(--hyper-gray);
 
   /* Typography */
-  --font-sans: var(--font-body);
-  --font-heading: var(--font-heading);
-  --font-mono: var(--font-mono);
+  --font-sans: var(--font-roobert);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -69,7 +86,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-roobert);
 }
 
 /* Custom Animations */
