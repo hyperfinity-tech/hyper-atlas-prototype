@@ -58,7 +58,6 @@ export function Chat() {
         throw new Error("Failed to get response");
       }
 
-      // Add empty assistant message that we'll stream into
       setMessages((prev) => [
         ...prev,
         {
@@ -68,7 +67,6 @@ export function Chat() {
         },
       ]);
 
-      // Handle streaming response
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
@@ -93,7 +91,6 @@ export function Chat() {
 
               if (data.type === "text") {
                 accumulatedContent += data.content;
-                // Update the assistant message with accumulated content
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantMessageId
@@ -103,7 +100,6 @@ export function Chat() {
                 );
               } else if (data.type === "citations") {
                 citations = data.citations;
-                // Update with citations
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantMessageId
@@ -115,7 +111,6 @@ export function Chat() {
                 throw new Error(data.message);
               }
             } catch (e) {
-              // Ignore JSON parse errors for incomplete chunks
               if (line.slice(6).trim()) {
                 console.warn("Failed to parse SSE data:", e);
               }
@@ -131,7 +126,6 @@ export function Chat() {
         content: "Sorry, I encountered an error. Please try again.",
       };
       setMessages((prev) => {
-        // Remove empty assistant message if it exists and add error
         const filtered = prev.filter(
           (msg) => !(msg.role === "assistant" && msg.content === "")
         );
@@ -143,40 +137,84 @@ export function Chat() {
   };
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
-      {/* Header with Hyperfinity branding */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 py-4">
-        <div className="mx-auto max-w-3xl flex items-center gap-3">
-          {/* Hyperfinity Logo */}
-          <Image
-            src="/hyperfinity_logo_dark.png"
-            alt="Hyperfinity"
-            width={120}
-            height={40}
-            className="dark:invert-0 h-6 w-auto"
-          />
-          {/* Globe Icon */}
-          <Image
-            src="/globe.svg"
-            alt="Atlas"
-            width={24}
-            height={24}
-            className="w-6 h-6"
-          />
-          {/* Atlas title - right aligned */}
-          <span className="ml-auto text-2xl font-bold tracking-tight text-hyper-pink">
-            Atlas
-          </span>
+    <div className="flex h-dvh flex-col relative">
+      {/* ══════════════════════════════════════════════════════════
+          DECORATIVE ELEMENTS: Cartographic frame
+          ══════════════════════════════════════════════════════════ */}
+      
+      {/* Grain texture overlay */}
+      <div className="grain-overlay" aria-hidden="true" />
+      
+      {/* Corner accents */}
+      <div className="corner-accent-tl" aria-hidden="true" />
+      <div className="corner-accent-br" aria-hidden="true" />
+      
+      {/* Coordinate markers */}
+      <span className="coord-marker text-hyper-pink" style={{ top: '50%', left: '24px', transform: 'rotate(-90deg) translateX(-50%)', transformOrigin: 'left center' }}>
+        51.5074° N
+      </span>
+      <span className="coord-marker text-hyper-teal" style={{ bottom: '24px', right: '120px' }}>
+        0.1278° W
+      </span>
+
+      {/* ══════════════════════════════════════════════════════════
+          HEADER: Glass navigation bar
+          ══════════════════════════════════════════════════════════ */}
+      <header className="sticky top-0 z-10 animate-slide-up">
+        <div className="glass-strong mx-6 mt-6 rounded-2xl px-6 py-4">
+          <div className="mx-auto max-w-4xl flex items-center gap-4">
+            {/* Hyperfinity Logo */}
+            <Image
+              src="/hyperfinity_logo_dark.png"
+              alt="Hyperfinity"
+              width={120}
+              height={40}
+              className="h-5 w-auto brightness-0 invert opacity-80"
+            />
+            
+            {/* Divider */}
+            <div className="w-px h-6 bg-white/20" />
+            
+            {/* Globe Icon with glow */}
+            <div className="relative">
+              <Image
+                src="/globe.svg"
+                alt="Atlas"
+                width={28}
+                height={28}
+                className="w-7 h-7"
+              />
+              <div className="absolute inset-0 blur-lg opacity-50">
+                <Image
+                  src="/globe.svg"
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="w-7 h-7"
+                />
+              </div>
+            </div>
+            
+            {/* Atlas title - dramatic typography */}
+            <h1 className="text-gradient text-2xl font-bold tracking-tight text-glow">
+              Atlas
+            </h1>
+            
+            {/* Spacer */}
+            <div className="flex-1" />
+            
+            {/* Status indicator */}
+            <div className="flex items-center gap-2 text-xs text-white/40 uppercase tracking-widest">
+              <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-hyper-pink animate-glow-pulse' : 'bg-hyper-teal'}`} />
+              {isLoading ? 'Processing' : 'Ready'}
+            </div>
+          </div>
         </div>
-        {/* Gradient accent line */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{
-            background: 'linear-gradient(90deg, var(--hyper-pink), var(--hyper-blue), var(--hyper-teal))'
-          }}
-        />
       </header>
 
+      {/* ══════════════════════════════════════════════════════════
+          MAIN CONTENT: Message area
+          ══════════════════════════════════════════════════════════ */}
       <div className="relative flex-1">
         <div
           ref={scrollContainerRef}
@@ -187,10 +225,11 @@ export function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Scroll to bottom button */}
         {!isAtBottom && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-hyper-pink text-white p-2.5 shadow-lg transition-all duration-200 hover:bg-hyper-pink-hover hover:scale-110 hover:shadow-xl active:scale-95"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 glass-button rounded-full p-3 text-white animate-scale-in"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -209,31 +248,47 @@ export function Chat() {
         )}
       </div>
 
-      <div className="border-t border-border/50 bg-background p-4">
-        <div className="mx-auto max-w-3xl">
-          {/* Curated sources toggle */}
-          <div className="flex justify-end mb-3">
-            <button
-              onClick={() => setUseCuratedOnly(!useCuratedOnly)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                useCuratedOnly
-                  ? "bg-hyper-teal text-black"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  useCuratedOnly ? "border-black bg-white" : "border-current"
+      {/* ══════════════════════════════════════════════════════════
+          FOOTER: Input area with controls
+          ══════════════════════════════════════════════════════════ */}
+      <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="glass-strong mx-6 mb-6 rounded-2xl p-5">
+          <div className="mx-auto max-w-4xl">
+            {/* Controls row */}
+            <div className="flex items-center justify-between mb-4">
+              {/* Left: Hint text */}
+              <span className="text-xs text-white/30 tracking-wide">
+                Press Enter to send • Shift+Enter for new line
+              </span>
+              
+              {/* Right: Curated sources toggle */}
+              <button
+                onClick={() => setUseCuratedOnly(!useCuratedOnly)}
+                className={`glass-button flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-medium tracking-wide uppercase transition-all duration-300 ${
+                  useCuratedOnly
+                    ? "!bg-hyper-teal/20 !border-hyper-teal/50"
+                    : ""
                 }`}
               >
-                {useCuratedOnly && (
-                  <div className="w-2 h-2 rounded-full bg-hyper-teal" />
-                )}
-              </div>
-              Use curated sources only
-            </button>
+                <div
+                  className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                    useCuratedOnly 
+                      ? "border-hyper-teal bg-hyper-teal/30" 
+                      : "border-white/40"
+                  }`}
+                >
+                  {useCuratedOnly && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-hyper-teal" />
+                  )}
+                </div>
+                <span className={useCuratedOnly ? "text-hyper-teal" : "text-white/60"}>
+                  Curated sources only
+                </span>
+              </button>
+            </div>
+            
+            <MessageInput onSend={sendMessage} disabled={isLoading} />
           </div>
-          <MessageInput onSend={sendMessage} disabled={isLoading} />
         </div>
       </div>
     </div>
