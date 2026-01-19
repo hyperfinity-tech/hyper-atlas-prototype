@@ -1,5 +1,7 @@
-import { Chat } from "@/components/Chat";
+import { ChatLayout } from "@/components/ChatLayout";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
-  return <Chat />;
+  return <ChatLayout />;
 }

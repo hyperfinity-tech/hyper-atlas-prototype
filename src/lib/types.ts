@@ -11,3 +11,10 @@ export interface Message {
   content: string;
   citations?: Citation[];
 }
+
+export interface Conversation {
+  id: string;
+  title: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

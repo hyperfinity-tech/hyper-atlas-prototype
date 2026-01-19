@@ -6,8 +6,23 @@ import { Message, Citation } from "@/lib/types";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 
-export function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+interface ChatProps {
+  conversationId: string | null;
+  messages: Message[];
+  onMessagesUpdate: (messages: Message[]) => void;
+  onUpdateTitle: (id: string, title: string) => void;
+  isLoadingMessages: boolean;
+  onStartNewConversation: () => void;
+}
+
+export function Chat({
+  conversationId,
+  messages,
+  onMessagesUpdate,
+  onUpdateTitle,
+  isLoadingMessages,
+  onStartNewConversation,
+}: ChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [useCuratedOnly, setUseCuratedOnly] = useState(false);
@@ -33,6 +48,12 @@ export function Chat() {
   }, [messages, isAtBottom, scrollToBottom]);
 
   const sendMessage = async (content: string) => {
+    // If no conversation selected, create one first
+    if (!conversationId) {
+      onStartNewConversation();
+      return;
+    }
+
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -41,7 +62,7 @@ export function Chat() {
 
     const assistantMessageId = crypto.randomUUID();
 
-    setMessages((prev) => [...prev, userMessage]);
+    onMessagesUpdate([...messages, userMessage]);
     setIsLoading(true);
 
     try {
@@ -51,6 +72,7 @@ export function Chat() {
         body: JSON.stringify({
           message: content,
           history: messages,
+          conversationId,
         }),
       });
 
@@ -58,8 +80,9 @@ export function Chat() {
         throw new Error("Failed to get response");
       }
 
-      setMessages((prev) => [
-        ...prev,
+      onMessagesUpdate([
+        ...messages,
+        userMessage,
         {
           id: assistantMessageId,
           role: "assistant",
@@ -91,22 +114,30 @@ export function Chat() {
 
               if (data.type === "text") {
                 accumulatedContent += data.content;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMessageId
-                      ? { ...msg, content: accumulatedContent }
-                      : msg
-                  )
-                );
+                onMessagesUpdate([
+                  ...messages,
+                  userMessage,
+                  {
+                    id: assistantMessageId,
+                    role: "assistant",
+                    content: accumulatedContent,
+                    citations,
+                  },
+                ]);
               } else if (data.type === "citations") {
                 citations = data.citations;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMessageId
-                      ? { ...msg, citations }
-                      : msg
-                  )
-                );
+                onMessagesUpdate([
+                  ...messages,
+                  userMessage,
+                  {
+                    id: assistantMessageId,
+                    role: "assistant",
+                    content: accumulatedContent,
+                    citations,
+                  },
+                ]);
+              } else if (data.type === "title" && conversationId) {
+                onUpdateTitle(conversationId, data.title);
               } else if (data.type === "error") {
                 throw new Error(data.message);
               }
@@ -125,45 +156,124 @@ export function Chat() {
         role: "assistant",
         content: "Sorry, I encountered an error. Please try again.",
       };
-      setMessages((prev) => {
-        const filtered = prev.filter(
+      onMessagesUpdate([
+        ...messages.filter(
           (msg) => !(msg.role === "assistant" && msg.content === "")
-        );
-        return [...filtered, errorMessage];
-      });
+        ),
+        userMessage,
+        errorMessage,
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Show welcome screen if no conversation selected
+  if (!conversationId && !isLoadingMessages) {
+    return (
+      <div className="flex h-dvh flex-col relative">
+        {/* Decorative elements */}
+        <div className="grain-overlay" aria-hidden="true" />
+        <div className="corner-accent-tl" aria-hidden="true" />
+        <div className="corner-accent-br" aria-hidden="true" />
+        <span
+          className="coord-marker text-hyper-pink"
+          style={{
+            top: "50%",
+            left: "24px",
+            transform: "rotate(-90deg) translateX(-50%)",
+            transformOrigin: "left center",
+          }}
+        >
+          51.5074 N
+        </span>
+        <span
+          className="coord-marker text-hyper-teal"
+          style={{ bottom: "24px", right: "120px" }}
+        >
+          0.1278 W
+        </span>
+
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md px-6 animate-fade-in">
+            <div className="relative mx-auto w-20 h-20 mb-6">
+              <Image
+                src="/globe.svg"
+                alt="Atlas"
+                width={80}
+                height={80}
+                className="w-full h-full"
+              />
+              <div className="absolute inset-0 blur-2xl opacity-50">
+                <Image
+                  src="/globe.svg"
+                  alt=""
+                  width={80}
+                  height={80}
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+            <h1 className="text-gradient text-4xl font-bold tracking-tight text-glow mb-4">
+              Atlas
+            </h1>
+            <p className="text-white/50 mb-8">
+              Your AI-powered knowledge navigator. Start a new conversation to
+              explore.
+            </p>
+            <button
+              onClick={onStartNewConversation}
+              className="btn-glow text-white rounded-xl px-6 py-3 font-medium tracking-wide text-sm inline-flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Start New Conversation
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-dvh flex-col relative">
-      {/* ══════════════════════════════════════════════════════════
-          DECORATIVE ELEMENTS: Cartographic frame
-          ══════════════════════════════════════════════════════════ */}
-      
-      {/* Grain texture overlay */}
+      {/* Decorative elements */}
       <div className="grain-overlay" aria-hidden="true" />
-      
-      {/* Corner accents */}
       <div className="corner-accent-tl" aria-hidden="true" />
       <div className="corner-accent-br" aria-hidden="true" />
-      
-      {/* Coordinate markers */}
-      <span className="coord-marker text-hyper-pink" style={{ top: '50%', left: '24px', transform: 'rotate(-90deg) translateX(-50%)', transformOrigin: 'left center' }}>
-        51.5074° N
+      <span
+        className="coord-marker text-hyper-pink"
+        style={{
+          top: "50%",
+          left: "24px",
+          transform: "rotate(-90deg) translateX(-50%)",
+          transformOrigin: "left center",
+        }}
+      >
+        51.5074 N
       </span>
-      <span className="coord-marker text-hyper-teal" style={{ bottom: '24px', right: '120px' }}>
-        0.1278° W
+      <span
+        className="coord-marker text-hyper-teal"
+        style={{ bottom: "24px", right: "120px" }}
+      >
+        0.1278 W
       </span>
 
-      {/* ══════════════════════════════════════════════════════════
-          HEADER: Glass navigation bar
-          ══════════════════════════════════════════════════════════ */}
+      {/* Header */}
       <header className="sticky top-0 z-10 animate-slide-up">
         <div className="glass-strong mx-6 mt-6 rounded-2xl px-6 py-4">
           <div className="mx-auto max-w-4xl flex items-center gap-4">
-            {/* Hyperfinity Logo */}
             <Image
               src="/hyperfinity_logo_dark.png"
               alt="Hyperfinity"
@@ -171,11 +281,7 @@ export function Chat() {
               height={40}
               className="h-5 w-auto brightness-0 invert opacity-80"
             />
-            
-            {/* Divider */}
             <div className="w-px h-6 bg-white/20" />
-            
-            {/* Globe Icon with glow */}
             <div className="relative">
               <Image
                 src="/globe.svg"
@@ -194,38 +300,43 @@ export function Chat() {
                 />
               </div>
             </div>
-            
-            {/* Atlas title - dramatic typography */}
             <h1 className="text-gradient text-2xl font-bold tracking-tight text-glow">
               Atlas
             </h1>
-            
-            {/* Spacer */}
             <div className="flex-1" />
-            
-            {/* Status indicator */}
             <div className="flex items-center gap-2 text-xs text-white/40 uppercase tracking-widest">
-              <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-hyper-pink animate-glow-pulse' : 'bg-hyper-teal'}`} />
-              {isLoading ? 'Processing' : 'Ready'}
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isLoading || isLoadingMessages
+                    ? "bg-hyper-pink animate-glow-pulse"
+                    : "bg-hyper-teal"
+                }`}
+              />
+              {isLoadingMessages
+                ? "Loading"
+                : isLoading
+                  ? "Processing"
+                  : "Ready"}
             </div>
           </div>
         </div>
       </header>
 
-      {/* ══════════════════════════════════════════════════════════
-          MAIN CONTENT: Message area
-          ══════════════════════════════════════════════════════════ */}
+      {/* Main content */}
       <div className="relative flex-1">
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
           className="absolute inset-0 overflow-y-auto touch-pan-y"
         >
-          <MessageList messages={messages} isLoading={isLoading} onSendMessage={sendMessage} />
+          <MessageList
+            messages={messages}
+            isLoading={isLoading || isLoadingMessages}
+            onSendMessage={sendMessage}
+          />
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Scroll to bottom button */}
         {!isAtBottom && (
           <button
             onClick={scrollToBottom}
@@ -248,20 +359,14 @@ export function Chat() {
         )}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          FOOTER: Input area with controls
-          ══════════════════════════════════════════════════════════ */}
-      <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      {/* Footer */}
+      <div className="animate-slide-up" style={{ animationDelay: "0.1s" }}>
         <div className="glass-strong mx-6 mb-6 rounded-2xl p-5">
           <div className="mx-auto max-w-4xl">
-            {/* Controls row */}
             <div className="flex items-center justify-between mb-4">
-              {/* Left: Hint text */}
               <span className="text-xs text-white/30 tracking-wide">
-                Press Enter to send • Shift+Enter for new line
+                Press Enter to send
               </span>
-              
-              {/* Right: Curated sources toggle */}
               <button
                 onClick={() => setUseCuratedOnly(!useCuratedOnly)}
                 className={`glass-button flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-medium tracking-wide uppercase transition-all duration-300 ${
@@ -272,8 +377,8 @@ export function Chat() {
               >
                 <div
                   className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                    useCuratedOnly 
-                      ? "border-hyper-teal bg-hyper-teal/30" 
+                    useCuratedOnly
+                      ? "border-hyper-teal bg-hyper-teal/30"
                       : "border-white/40"
                   }`}
                 >
@@ -281,13 +386,17 @@ export function Chat() {
                     <div className="w-1.5 h-1.5 rounded-full bg-hyper-teal" />
                   )}
                 </div>
-                <span className={useCuratedOnly ? "text-hyper-teal" : "text-white/60"}>
+                <span
+                  className={useCuratedOnly ? "text-hyper-teal" : "text-white/60"}
+                >
                   Curated sources only
                 </span>
               </button>
             </div>
-            
-            <MessageInput onSend={sendMessage} disabled={isLoading} />
+            <MessageInput
+              onSend={sendMessage}
+              disabled={isLoading || isLoadingMessages || !conversationId}
+            />
           </div>
         </div>
       </div>

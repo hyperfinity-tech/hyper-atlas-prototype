@@ -9,7 +9,10 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(dir \"C:\\\\Users\\\\Thomas Fothergill\\\\Github\\\\hyper-atlas-prototype\" /B)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(cd:*)",
+      "WebSearch",
+      "WebFetch(domain:vercel.com)"
     ]
   }
 }
