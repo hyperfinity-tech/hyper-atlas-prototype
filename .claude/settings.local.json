@@ -12,7 +12,9 @@
       "Bash(findstr:*)",
       "Bash(cd:*)",
       "WebSearch",
-      "WebFetch(domain:vercel.com)"
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:docs.cloud.google.com)"
     ]
   }
 }

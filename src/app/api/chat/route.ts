@@ -3,6 +3,7 @@ import { getGenAI, FILE_SEARCH_STORE_NAME } from "@/lib/gemini";
 import { db, conversations, messages } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { Message, Citation } from "@/lib/types";
+import { resolveSharePointUrl } from "@/lib/fileMapping";
 
 export const runtime = "nodejs";
 
@@ -140,13 +141,27 @@ export async function POST(request: Request) {
             }
           }
 
-          // Send citations at the end
+          // Resolve SharePoint URLs for citations
           if (citations.length > 0) {
+            const resolvedCitations = await Promise.all(
+              citations.map(async (citation) => {
+                const sharePointUrl = await resolveSharePointUrl(citation.sourceTitle);
+                return {
+                  ...citation,
+                  sourceUri: sharePointUrl || citation.sourceUri,
+                };
+              })
+            );
+
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ type: "citations", citations })}\n\n`
+                `data: ${JSON.stringify({ type: "citations", citations: resolvedCitations })}\n\n`
               )
             );
+
+            // Update citations array for database storage
+            citations.length = 0;
+            citations.push(...resolvedCitations);
           }
 
           // Save assistant message to database

@@ -35,7 +35,15 @@ src/
 │   └── Citation.tsx        # Clickable citation popover
 └── lib/
     ├── gemini.ts           # Gemini client configuration
+    ├── fileMapping.ts      # SharePoint URL resolution from S3 mapping
     └── types.ts            # Shared TypeScript types
+
+scripts/
+├── upload_files.py         # Local file upload (legacy)
+└── sharepoint-sync/        # Fargate task for SharePoint sync
+    ├── sync.py             # Main sync script
+    ├── Dockerfile
+    └── requirements.txt
 ```
 
 ## Key Integration Points
@@ -44,8 +52,17 @@ src/
 
 **Multi-turn Conversation**: Chat history is maintained client-side and sent with each request to provide conversation context.
 
+**SharePoint URL Resolution**: Citations include clickable links to source documents in SharePoint. The `/api/chat` route resolves URLs using a mapping file stored in S3. See `docs/sharepoint-sync.md` for details.
+
 ## Environment Variables
 
 Copy `.env.local.example` to `.env.local`:
 - `GOOGLE_API_KEY` - Gemini API key
 - `FILE_SEARCH_STORE_NAME` - Name of the File Search Store (created by upload script)
+- `FILE_MAPPING_BUCKET` - S3 bucket containing the SharePoint URL mapping
+- `FILE_MAPPING_KEY` - S3 key for the mapping file (default: `sharepoint-sync/atlas-store/file-mapping.json`)
+
+## Documentation
+
+- `docs/sharepoint-sync.md` - SharePoint sync and citation URL resolution
+- `docs/clerk-authentication.md` - Clerk authentication setup
